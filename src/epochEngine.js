@@ -1,4 +1,4 @@
-import { Graph, Node, Edge } from './graph.js';
+import { Graph, Node, Edge, EdgeTypes } from './graph.js';
 import { Suceso } from './suceso.js';
 
 export class EpochEngine {
@@ -86,7 +86,7 @@ export class EpochEngine {
 
         // Validar relaciones 'precedes'
         for (const edge of this.graph.edges.values()) {
-            if (edge.type === 'precedes') {
+            if (edge.type === EdgeTypes.PRECEDES) {
                 const fromSuceso = this.graph.getNode(edge.from).data;
                 const toSuceso = this.graph.getNode(edge.to).data;
 
@@ -118,7 +118,7 @@ export class EpochEngine {
             }
 
             // Validar 'branches'
-            if (edge.type === 'branches') {
+            if (edge.type === EdgeTypes.BRANCHES) {
                 const toSuceso = this.graph.getNode(edge.to).data;
                 if (!toSuceso.branch) {
                     report.warnings.push(
@@ -128,12 +128,12 @@ export class EpochEngine {
             }
 
             // Validar 'merges'
-            if (edge.type === 'merges') {
+            if (edge.type === EdgeTypes.MERGES) {
                 const toId = edge.to;
                 const toNode = this.graph.getNode(toId);
 
                 // Contar cuántos 'merges' llegan a este nodo
-                const incomingMergesCount = this.graph.getIncoming(toId).filter(e => e.type === 'merges').length;
+                const incomingMergesCount = this.graph.getIncoming(toId).filter(e => e.type === EdgeTypes.MERGES).length;
                 if (incomingMergesCount < 2) {
                     report.warnings.push(
                         `Suceso '${toNode.data.title}' es destino de una relación 'merges', pero no recibe al menos dos confluencias de este tipo.`

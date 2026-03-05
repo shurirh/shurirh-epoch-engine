@@ -28,6 +28,17 @@ export class Edge {
 }
 
 /**
+ * Tipos de relaciones entre nodos.
+ */
+export const EdgeTypes = {
+    PRECEDES: "precedes",
+    CAUSES: "causes",
+    BRANCHES: "branches",
+    MERGES: "merges",
+    LOOPS: "loops"
+}
+
+/**
  * Estructura del Grafo Dirigido.
  * Administra Nodos y Aristas sin aplicar lógica semántica temporal.
  */

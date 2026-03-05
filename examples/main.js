@@ -1,4 +1,4 @@
-import { EpochEngine, Suceso } from '../src/index.js';
+import { EdgeTypes, EpochEngine, Suceso } from '../src/index.js';
 
 const output = document.getElementById('output');
 const btn = document.getElementById('run-demo');
@@ -6,8 +6,8 @@ const btn = document.getElementById('run-demo');
 function log(msg, type = 'info') {
     const line = document.createElement('div');
     line.textContent = `> ${msg}`;
-    if (type === 'success') line.className = 'success';
-    if (type === 'warning') line.className = 'warning';
+    if (type === EdgeTypes.SUCCESS) line.className = 'success';
+    if (type === EdgeTypes.WARNING) line.className = 'warning';
     output.appendChild(line);
 }
 
@@ -35,7 +35,7 @@ function runSimulation() {
     engine.addSuceso(s2);
 
     log('Relacionando Sucesos: s1 precede a s2...', 'info');
-    engine.relate('s1', 's2', 'precedes');
+    engine.relate('s1', 's2', EdgeTypes.PRECEDES);
 
     // 2. Simulamos una bifurcación (Nexus Event)
     const nexusEvent = new Suceso({
@@ -46,7 +46,7 @@ function runSimulation() {
     engine.addSuceso(nexusEvent);
 
     log('Creando rama variante desde s2 hacia la Variante-616...', 'info');
-    engine.relate('s2', 'nexus', 'branches');
+    engine.relate('s2', 'nexus', EdgeTypes.BRANCHES);
 
     // 3. Forzamos un error de consistencia cronológica para ver si lo detecta
     const s3 = new Suceso({
@@ -66,7 +66,7 @@ function runSimulation() {
 
     // s3 causa a s4 pero la fecha de s3 > s4 en la misma rama, el motor debería advertirlo en una relación precede/cause 
     // (Para nuestro motor, documentamos que `precedes` si rompe fechas, lanza warning)
-    engine.relate('s3', 's4', 'precedes');
+    engine.relate('s3', 's4', EdgeTypes.PRECEDES);
 
     log('Grafo construido. Ejecutando validación...', 'info');
     const report = engine.validate();

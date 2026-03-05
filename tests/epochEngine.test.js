@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { EpochEngine, Suceso } from '../src/index.js';
+import { EpochEngine, Suceso, EdgeTypes } from '../src/index.js';
 
 describe('EpochEngine', () => {
     let engine;
@@ -30,9 +30,9 @@ describe('EpochEngine', () => {
         engine.addSuceso(s1);
         engine.addSuceso(s2);
 
-        const edge = engine.relate('s1', 's2', 'precedes');
+        const edge = engine.relate('s1', 's2', EdgeTypes.PRECEDES);
         expect(edge).toBeDefined();
-        expect(edge.type).toBe('precedes');
+        expect(edge.type).toBe(EdgeTypes.PRECEDES);
 
         const outgoing = engine.getOutgoingRelations('s1');
         expect(outgoing.length).toBe(1);
@@ -48,7 +48,7 @@ describe('EpochEngine', () => {
         engine.addSuceso(s2);
 
         // Creamos la relación inconsistente
-        engine.relate('s1', 's2', 'precedes');
+        engine.relate('s1', 's2', EdgeTypes.PRECEDES);
 
         const report = engine.validate();
         expect(report.warnings.length).toBe(1);
@@ -63,7 +63,7 @@ describe('EpochEngine', () => {
         engine.addSuceso(s2);
 
         // Relacionamos solo UNO con 'merges'
-        engine.relate('s1', 's2', 'merges');
+        engine.relate('s1', 's2', EdgeTypes.MERGES);
 
         const report = engine.validate();
         expect(report.warnings.length).toBe(1);
@@ -77,7 +77,7 @@ describe('EpochEngine', () => {
         engine.addSuceso(s1);
         engine.addSuceso(s2);
 
-        engine.relate('s1', 's2', 'precedes');
+        engine.relate('s1', 's2', EdgeTypes.PRECEDES);
 
         const report = engine.validate();
         expect(report.warnings.length).toBe(0);

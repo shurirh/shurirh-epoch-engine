@@ -4,7 +4,9 @@
   "description": "Motor Narrativo Temporal",
   "main": "./dist/epoch-engine.umd.cjs",
   "directories": {
-    "doc": "doc"
+    "doc": "doc",
+    "example": "examples",
+    "test": "tests"
   },
   "scripts": {
     "test": "vitest",
@@ -23,5 +25,13 @@
   "devDependencies": {
     "vite": "^7.3.1",
     "vitest": "^4.0.18"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shurirh/shurirh-epoch-engine.git"
+  },
+  "bugs": {
+    "url": "https://github.com/shurirh/shurirh-epoch-engine/issues"
+  },
+  "homepage": "https://github.com/shurirh/shurirh-epoch-engine#readme"
 }
