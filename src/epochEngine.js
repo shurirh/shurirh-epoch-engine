@@ -61,6 +61,34 @@ export class EpochEngine {
     }
 
     /**
+     * Importa un grafo completo desde un objeto JSON.
+     * @param {Object} data - Objeto con { events: [], relations: [] }
+     */
+    importJSON(data) {
+        if (!data || !Array.isArray(data.events) || !Array.isArray(data.relations)) {
+            throw new Error('Formato JSON inválido. Debe contener "events" y "relations" como arrays.');
+        }
+
+        // 1. Crear e insertar Sucesos
+        data.events.forEach(evData => {
+            const suceso = new Suceso({
+                id: evData.id,
+                title: evData.title,
+                description: evData.description,
+                date: evData.date,
+                tags: evData.tags,
+                meta: evData.meta
+            });
+            this.addSuceso(suceso);
+        });
+
+        // 2. Crear relaciones
+        data.relations.forEach(relData => {
+            this.relate(relData.from, relData.to, relData.type, relData.metadata);
+        });
+    }
+
+    /**
      * Devuelve todas las relaciones de salida de un Suceso.
      * @param {string} sucesoId 
      */
@@ -84,45 +112,38 @@ export class EpochEngine {
     validate() {
         const report = { warnings: [], errors: [] };
 
-        // Validar relaciones 'precedes'
         for (const edge of this.graph.edges.values()) {
+            const fromSuceso = this.graph.getNode(edge.from).data;
+            const toSuceso = this.graph.getNode(edge.to).data;
+
+            // Validar relaciones 'precedes'
             if (edge.type === EdgeTypes.PRECEDES) {
-                const fromSuceso = this.graph.getNode(edge.from).data;
-                const toSuceso = this.graph.getNode(edge.to).data;
-
-                // Comprobación de consistencia temporal en la misma rama si ambas tienen fechas comparables
-                if (
-                    fromSuceso.date !== null &&
-                    toSuceso.date !== null &&
-                    fromSuceso.branch === toSuceso.branch
-                ) {
-                    try {
-                        // Intentar coerción a Number (ej. si son timestamps o fechas simples numéricas)
-                        // Si son Date objects, al restar/comparar se tratarán como timestamp
-                        const d1 = new Date(fromSuceso.date).getTime();
-                        const d2 = new Date(toSuceso.date).getTime();
-
-                        if (!isNaN(d1) && !isNaN(d2) && d1 > d2) {
-                            report.warnings.push(
-                                `Inconsistencia cronológica: Suceso '${fromSuceso.title}' precede a '${toSuceso.title}', pero la fecha de origen (${fromSuceso.date}) es posterior a la de destino (${toSuceso.date}).`
-                            );
-                        }
-                    } catch (e) {
-                        // Falla silenciosa si los formatos de fecha son oscuros o strings libres no comparables (ej. 'Era II')
+                // Si ambas tienen fechas, validamos consistencia cronológica básica
+                // Se asume que si hay una relación precede, debe haber coherencia local de tiempo
+                if (fromSuceso.date !== null && toSuceso.date !== null) {
+                    if (fromSuceso.date > toSuceso.date) {
+                        report.warnings.push(
+                            `Inconsistencia cronológica: Suceso '${fromSuceso.title}' precede a '${toSuceso.title}', pero la fecha de origen (${fromSuceso.date}) es posterior a la de destino (${toSuceso.date}).`
+                        );
                     }
-                } else if (fromSuceso.branch !== toSuceso.branch) {
+                }
+
+                // Opcional: Warning si atraviesan ramas declaradas en meta
+                const fromBranch = fromSuceso.meta?.originBranch;
+                const toBranch = toSuceso.meta?.originBranch;
+                if (fromBranch && toBranch && fromBranch !== toBranch) {
                     report.warnings.push(
-                        `Relación 'precedes' entre '${fromSuceso.title}' y '${toSuceso.title}' atraviesa distintas ramas (${fromSuceso.branch} -> ${toSuceso.branch}). Tal vez debería ser 'branches' o 'merges'.`
+                        `Relación 'precedes' entre '${fromSuceso.title}' y '${toSuceso.title}' atraviesa distintas ramas declaradas en meta (${fromBranch} -> ${toBranch}).`
                     );
                 }
             }
 
             // Validar 'branches'
             if (edge.type === EdgeTypes.BRANCHES) {
-                const toSuceso = this.graph.getNode(edge.to).data;
-                if (!toSuceso.branch) {
+                // Advertencia si el destino no declara una nueva rama en meta (opcional según spec)
+                if (!toSuceso.meta?.originBranch) {
                     report.warnings.push(
-                        `Suceso destino '${toSuceso.title}' es producto de un 'branches' pero no tiene una rama definida en sus propiedades.`
+                        `Suceso destino '${toSuceso.title}' es producto de un 'branches' pero no declara una rama de origen en su meta.`
                     );
                 }
             }
@@ -130,13 +151,10 @@ export class EpochEngine {
             // Validar 'merges'
             if (edge.type === EdgeTypes.MERGES) {
                 const toId = edge.to;
-                const toNode = this.graph.getNode(toId);
-
-                // Contar cuántos 'merges' llegan a este nodo
                 const incomingMergesCount = this.graph.getIncoming(toId).filter(e => e.type === EdgeTypes.MERGES).length;
                 if (incomingMergesCount < 2) {
                     report.warnings.push(
-                        `Suceso '${toNode.data.title}' es destino de una relación 'merges', pero no recibe al menos dos confluencias de este tipo.`
+                        `Suceso '${toSuceso.title}' es destino de una relación 'merges', pero no recibe al menos dos confluencias de este tipo.`
                     );
                 }
             }

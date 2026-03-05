@@ -46,6 +46,9 @@ export class Graph {
     constructor() {
         this.nodes = new Map();
         this.edges = new Map();
+        // Índices para búsqueda rápida O(1) de adyacencias
+        this.outgoingIndex = new Map(); // Map<nodeId, Set<edgeId>>
+        this.incomingIndex = new Map(); // Map<nodeId, Set<edgeId>>
     }
 
     // --- Nodos ---
@@ -64,14 +67,21 @@ export class Graph {
     removeNode(nodeId) {
         if (!this.nodes.has(nodeId)) return false;
 
-        // Al eliminar un nodo, también debemos eliminar sus aristas incidentes
-        const edgesToRemove = [];
-        for (const edge of this.edges.values()) {
-            if (edge.from === nodeId || edge.to === nodeId) {
-                edgesToRemove.push(edge.id);
+        // Eliminar aristas salientes
+        const outgoing = this.outgoingIndex.get(nodeId);
+        if (outgoing) {
+            for (const edgeId of outgoing) {
+                this.removeEdge(edgeId);
             }
         }
-        edgesToRemove.forEach(edgeId => this.removeEdge(edgeId));
+
+        // Eliminar aristas entrantes
+        const incoming = this.incomingIndex.get(nodeId);
+        if (incoming) {
+            for (const edgeId of incoming) {
+                this.removeEdge(edgeId);
+            }
+        }
 
         return this.nodes.delete(nodeId);
     }
@@ -92,11 +102,36 @@ export class Graph {
         if (this.edges.has(edge.id)) {
             throw new Error(`La arista con ID ${edge.id} ya existe`);
         }
+
+        // Impedir duplicados lógicos (A --type--> B)
+        const logicalKey = `${edge.from}|${edge.type}|${edge.to}`;
+        for (const existingEdge of this.edges.values()) {
+            const existingKey = `${existingEdge.from}|${existingEdge.type}|${existingEdge.to}`;
+            if (logicalKey === existingKey) {
+                throw new Error(`Ya existe una relación de tipo ${edge.type} entre ${edge.from} y ${edge.to}`);
+            }
+        }
+
         this.edges.set(edge.id, edge);
+
+        // Actualizar índices
+        if (!this.outgoingIndex.has(edge.from)) this.outgoingIndex.set(edge.from, new Set());
+        if (!this.incomingIndex.has(edge.to)) this.incomingIndex.set(edge.to, new Set());
+
+        this.outgoingIndex.get(edge.from).add(edge.id);
+        this.incomingIndex.get(edge.to).add(edge.id);
+
         return edge;
     }
 
     removeEdge(edgeId) {
+        const edge = this.edges.get(edgeId);
+        if (!edge) return false;
+
+        // Actualizar índices
+        this.outgoingIndex.get(edge.from)?.delete(edgeId);
+        this.incomingIndex.get(edge.to)?.delete(edgeId);
+
         return this.edges.delete(edgeId);
     }
 
@@ -107,18 +142,22 @@ export class Graph {
     // --- Relaciones Adyacentes ---
 
     getOutgoing(nodeId) {
-        const outgoing = [];
-        for (const edge of this.edges.values()) {
-            if (edge.from === nodeId) outgoing.push(edge);
-        }
-        return outgoing;
+        const edgeIds = this.outgoingIndex.get(nodeId);
+        if (!edgeIds) return [];
+        return Array.from(edgeIds).map(id => this.edges.get(id));
     }
 
     getIncoming(nodeId) {
-        const incoming = [];
-        for (const edge of this.edges.values()) {
-            if (edge.to === nodeId) incoming.push(edge);
-        }
-        return incoming;
+        const edgeIds = this.incomingIndex.get(nodeId);
+        if (!edgeIds) return [];
+        return Array.from(edgeIds).map(id => this.edges.get(id));
+    }
+
+    hasNode(id) {
+        return this.nodes.has(id);
+    }
+
+    hasEdge(id) {
+        return this.edges.has(id);
     }
 }

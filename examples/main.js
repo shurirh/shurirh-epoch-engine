@@ -13,74 +13,43 @@ function log(msg, type = 'info') {
 
 function runSimulation() {
     output.innerHTML = '';
-    log('Instanciando Motor Temporal...', 'info');
+    log('Instanciando EpochEngine v0.2...', 'info');
 
     const engine = new EpochEngine();
 
-    // 1. Creamos Sucesos en la Sagrada Línea Temporal
-    const s1 = new Suceso({
-        id: 's1',
-        title: 'Nacimiento de la República',
-        date: -509,
-        branch: 'TVA-Prime'
-    });
-    const s2 = new Suceso({
-        id: 's2',
-        title: 'Caída de la República',
-        date: -27,
-        branch: 'TVA-Prime'
-    });
+    // Datos maestros en formato JSON (Capa de Importación)
+    const dataset = {
+        events: [
+            { id: 'roma-01', title: 'Nacimiento de la República', date: -509 },
+            { id: 'roma-02', title: 'Caída de la República', date: -27 },
+            { id: 'nexus', title: 'Julio César no es asesinado', meta: { originBranch: 'Variant-616' } },
+            { id: 'future-01', title: 'Invento de la máquina del tiempo', date: 2024 },
+            { id: 'future-02', title: 'Regreso al pasado', date: 0 }
+        ],
+        relations: [
+            { from: 'roma-01', to: 'roma-02', type: EdgeTypes.PRECEDES },
+            { from: 'roma-02', to: 'nexus', type: EdgeTypes.BRANCHES },
+            { from: 'future-01', to: 'future-02', type: EdgeTypes.PRECEDES }
+        ]
+    };
 
-    engine.addSuceso(s1);
-    engine.addSuceso(s2);
+    log('Importando universo desde JSON...', 'info');
+    engine.importJSON(dataset);
 
-    log('Relacionando Sucesos: s1 precede a s2...', 'info');
-    engine.relate('s1', 's2', EdgeTypes.PRECEDES);
-
-    // 2. Simulamos una bifurcación (Nexus Event)
-    const nexusEvent = new Suceso({
-        id: 'nexus',
-        title: 'Julio César no es asesinado',
-        branch: 'Variant-616'
-    });
-    engine.addSuceso(nexusEvent);
-
-    log('Creando rama variante desde s2 hacia la Variante-616...', 'info');
-    engine.relate('s2', 'nexus', EdgeTypes.BRANCHES);
-
-    // 3. Forzamos un error de consistencia cronológica para ver si lo detecta
-    const s3 = new Suceso({
-        id: 's3',
-        title: 'Invento de la máquina del tiempo',
-        date: 2024,
-        branch: 'Variant-616'
-    });
-    const s4 = new Suceso({
-        id: 's4',
-        title: 'Regreso al pasado (Año 0)',
-        date: 0,
-        branch: 'Variant-616'
-    });
-    engine.addSuceso(s3);
-    engine.addSuceso(s4);
-
-    // s3 causa a s4 pero la fecha de s3 > s4 en la misma rama, el motor debería advertirlo en una relación precede/cause 
-    // (Para nuestro motor, documentamos que `precedes` si rompe fechas, lanza warning)
-    engine.relate('s3', 's4', EdgeTypes.PRECEDES);
-
-    log('Grafo construido. Ejecutando validación...', 'info');
+    log('Grafo construido. Ejecutando validación v0.2...', 'info');
     const report = engine.validate();
 
     if (report.warnings.length > 0) {
-        log('Advertencias detectadas por el Motor Temporal:', 'warning');
-        report.warnings.forEach(w => log(`⚠ WARN: ${w}`, 'warning'));
+        log('Advertencias detectadas (Física Temporal):', 'warning');
+        report.warnings.forEach(w => log(`⚠ ${w}`, 'warning'));
+    } else {
+        log('Tejido temporal consistente.', 'success');
     }
 
     log('Simulación completada.', 'success');
-    console.log('--- Inspector del Motor Temporal ---');
-    console.log('Instancia del Motor:', engine);
-    console.log('Nodos en el Grafo (Sucesos):', Array.from(engine.graph.nodes.values()));
-    console.log('Aristas en el Grafo (Relaciones):', Array.from(engine.graph.edges.values()));
+    console.log('--- Inspector del EpochEngine ---');
+    console.log('Nodos (Sucesos):', Array.from(engine.graph.nodes.values()));
+    console.log('Relaciones:', Array.from(engine.graph.edges.values()));
 }
 
 btn.addEventListener('click', runSimulation);

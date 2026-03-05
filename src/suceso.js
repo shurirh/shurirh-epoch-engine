@@ -5,21 +5,19 @@
  */
 export class Suceso {
     /**
-     * @param {Object} params - Propiedades del suceso
-     * @param {string} params.id - Identificador único obligatorio (ej. UUID)
-     * @param {string} params.title - Título o nombre corto del suceso
-     * @param {string} [params.description=''] - Descripción ampliada
-     * @param {any} [params.date=null] - Fecha opcional (puede ser número, string o Date)
-     * @param {string} [params.branch=null] - Rama temporal a la que pertenece inicialmente (opcional)
-     * @param {Array<string>} [params.tags=[]] - Etiquetas para agrupar o filtrar
-     * @param {Object} [params.meta={}] - Metadatos adicionales arbitrarios 
-     */
+   * @param {Object} params - Propiedades del suceso
+   * @param {string} params.id - Identificador único obligatorio (ej. UUID)
+   * @param {string} params.title - Título o nombre corto del suceso
+   * @param {string} [params.description=''] - Descripción ampliada
+   * @param {number|null} [params.date=null] - Ancla cronológica (abstracta)
+   * @param {Array<string>} [params.tags=[]] - Etiquetas para agrupar o filtrar
+   * @param {Object} [params.meta={}] - Metadatos adicionales arbitrarios 
+   */
     constructor({
         id,
         title,
         description = '',
         date = null,
-        branch = null,
         tags = [],
         meta = {}
     }) {
@@ -30,18 +28,21 @@ export class Suceso {
             throw new Error('Todo Suceso debe tener un título.');
         }
 
+        if (date !== null && typeof date !== 'number') {
+            throw new Error('La propiedad date debe ser de tipo number (o null).');
+        }
+
         this.id = id;
         this.title = title;
         this.description = description;
 
-        // El date es opcional, sirve como ancla cronológica contextual
+        // El date es opcional, sirve como ancla cronológica contextual (unidad a definir por el usuario)
         this.date = date;
 
-        // La rama donde este suceso "nace", aunque internamente pueda
-        // estar conectado a más ramas con Graph.
-        this.branch = branch;
+        // Proteger las etiquetas de mutaciones externas clonando el array
+        this.tags = Array.isArray(tags) ? [...tags] : [];
 
-        this.tags = Array.isArray(tags) ? tags : [];
-        this.meta = typeof meta === 'object' && meta !== null ? meta : {};
+        // Validar y parsear objeto plano para metadatos
+        this.meta = typeof meta === 'object' && meta !== null && !Array.isArray(meta) ? meta : {};
     }
 }

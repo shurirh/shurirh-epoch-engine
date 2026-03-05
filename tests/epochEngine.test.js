@@ -40,9 +40,9 @@ describe('EpochEngine', () => {
     });
 
     it('validate() debería detectar inconsistencias cronológicas simples', () => {
-        // Si s1 ocurre DESPUÉS que s2, pero s1 PRECEDES a s2 en la misma rama, hay un error cronológico.
-        const s1 = new Suceso({ id: 's1', title: 'Caída de Roma', date: 476, branch: 'main' });
-        const s2 = new Suceso({ id: 's2', title: 'Fundación de Roma', date: -753, branch: 'main' });
+        // Si s1 ocurre DESPUÉS que s2, pero s1 PRECEDES a s2, hay un error cronológico.
+        const s1 = new Suceso({ id: 's1', title: 'Caída de Roma', date: 476 });
+        const s2 = new Suceso({ id: 's2', title: 'Fundación de Roma', date: -753 });
 
         engine.addSuceso(s1);
         engine.addSuceso(s2);
@@ -70,9 +70,9 @@ describe('EpochEngine', () => {
         expect(report.warnings[0]).toContain('no recibe al menos dos confluencias');
     });
 
-    it('validate() no debería emitir alertas si las ramas son consistentes', () => {
-        const s1 = new Suceso({ id: 's1', title: 'Evento 1', date: 100, branch: 'main' });
-        const s2 = new Suceso({ id: 's2', title: 'Evento 2', date: 200, branch: 'main' });
+    it('validate() no debería emitir alertas si los sucesos son cronológicamente consistentes', () => {
+        const s1 = new Suceso({ id: 's1', title: 'Evento 1', date: 100 });
+        const s2 = new Suceso({ id: 's2', title: 'Evento 2', date: 200 });
 
         engine.addSuceso(s1);
         engine.addSuceso(s2);
@@ -82,5 +82,37 @@ describe('EpochEngine', () => {
         const report = engine.validate();
         expect(report.warnings.length).toBe(0);
         expect(report.errors.length).toBe(0);
+    });
+
+    it('debería impedir añadir relaciones duplicadas del mismo tipo entre los mismos nodos', () => {
+        const s1 = new Suceso({ id: 's1', title: 'S1' });
+        const s2 = new Suceso({ id: 's2', title: 'S2' });
+        engine.addSuceso(s1);
+        engine.addSuceso(s2);
+
+        engine.relate('s1', 's2', EdgeTypes.CAUSES);
+
+        expect(() => {
+            engine.relate('s1', 's2', EdgeTypes.CAUSES);
+        }).toThrow(/Ya existe una relación/);
+    });
+
+    it('debería poder importar un grafo desde JSON', () => {
+        const data = {
+            events: [
+                { id: 'e1', title: 'Evento 1', date: 10 },
+                { id: 'e2', title: 'Evento 2', date: 20 }
+            ],
+            relations: [
+                { from: 'e1', to: 'e2', type: EdgeTypes.PRECEDES }
+            ]
+        };
+
+        engine.importJSON(data);
+
+        expect(engine.getSuceso('e1')).toBeDefined();
+        expect(engine.getSuceso('e2')).toBeDefined();
+        expect(engine.getOutgoingRelations('e1').length).toBe(1);
+        expect(engine.getOutgoingRelations('e1')[0].to).toBe('e2');
     });
 });
