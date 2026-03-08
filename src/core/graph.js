@@ -1,64 +1,27 @@
-/**
- * Representa un nodo genérico en el grafo.
- * Es agnóstico al dominio (no sabe qué es un Suceso).
- */
-export class Node {
-    constructor(id, data = {}, metadata = {}) {
-        if (!id) throw new Error('Un nodo debe tener un ID único');
-        this.id = id;
-        this.data = data;
-        this.metadata = metadata;
-    }
-}
+import { Node } from './node.js';
+import { Edge } from './edge.js';
 
 /**
- * Representa una arista (relación dirigida) en el grafo.
- */
-export class Edge {
-    constructor(id, fromId, toId, type, metadata = {}) {
-        if (!id || !fromId || !toId || !type) {
-            throw new Error('Una arista debe tener id, from, to y type');
-        }
-        this.id = id;
-        this.from = fromId;
-        this.to = toId;
-        this.type = type;
-        this.metadata = metadata;
-    }
-}
-
-/**
- * Tipos de relaciones entre nodos.
- */
-export const EdgeTypes = {
-    PRECEDES: "precedes",
-    CAUSES: "causes",
-    BRANCHES: "branches",
-    MERGES: "merges",
-    LOOPS: "loops"
-}
-
-/**
- * Estructura del Grafo Dirigido.
- * Administra Nodos y Aristas sin aplicar lógica semántica temporal.
+ * Directed Graph Structure.
+ * Manages Nodes and Edges without applying temporal semantic logic.
  */
 export class Graph {
     constructor() {
         this.nodes = new Map();
         this.edges = new Map();
-        // Índices para búsqueda rápida O(1) de adyacencias
+        // Indices for fast O(1) adjacency lookup
         this.outgoingIndex = new Map(); // Map<nodeId, Set<edgeId>>
         this.incomingIndex = new Map(); // Map<nodeId, Set<edgeId>>
     }
 
-    // --- Nodos ---
+    // --- Nodes ---
 
     addNode(node) {
         if (!(node instanceof Node)) {
-            throw new Error('Debe proporcionar una instancia de Node');
+            throw new Error('Must provide a Node instance');
         }
         if (this.nodes.has(node.id)) {
-            throw new Error(`El nodo con ID ${node.id} ya existe`);
+            throw new Error(`Node with ID ${node.id} already exists`);
         }
         this.nodes.set(node.id, node);
         return node;
@@ -67,7 +30,7 @@ export class Graph {
     removeNode(nodeId) {
         if (!this.nodes.has(nodeId)) return false;
 
-        // Eliminar aristas salientes
+        // Remove outgoing edges
         const outgoing = this.outgoingIndex.get(nodeId);
         if (outgoing) {
             for (const edgeId of outgoing) {
@@ -75,7 +38,7 @@ export class Graph {
             }
         }
 
-        // Eliminar aristas entrantes
+        // Remove incoming edges
         const incoming = this.incomingIndex.get(nodeId);
         if (incoming) {
             for (const edgeId of incoming) {
@@ -90,31 +53,31 @@ export class Graph {
         return this.nodes.get(nodeId);
     }
 
-    // --- Aristas ---
+    // --- Edges ---
 
     addEdge(edge) {
         if (!(edge instanceof Edge)) {
-            throw new Error('Debe proporcionar una instancia de Edge');
+            throw new Error('Must provide an Edge instance');
         }
         if (!this.nodes.has(edge.from) || !this.nodes.has(edge.to)) {
-            throw new Error('Ambos nodos (from y to) deben existir en el grafo antes de crear una arista');
+            throw new Error('Both nodes (from and to) must exist in the graph before creating an edge');
         }
         if (this.edges.has(edge.id)) {
-            throw new Error(`La arista con ID ${edge.id} ya existe`);
+            throw new Error(`Edge with ID ${edge.id} already exists`);
         }
 
-        // Impedir duplicados lógicos (A --type--> B)
+        // Prevent logical duplicates (A --type--> B)
         const logicalKey = `${edge.from}|${edge.type}|${edge.to}`;
         for (const existingEdge of this.edges.values()) {
             const existingKey = `${existingEdge.from}|${existingEdge.type}|${existingEdge.to}`;
             if (logicalKey === existingKey) {
-                throw new Error(`Ya existe una relación de tipo ${edge.type} entre ${edge.from} y ${edge.to}`);
+                throw new Error(`A relationship of type ${edge.type} already exists between ${edge.from} and ${edge.to}`);
             }
         }
 
         this.edges.set(edge.id, edge);
 
-        // Actualizar índices
+        // Update indices
         if (!this.outgoingIndex.has(edge.from)) this.outgoingIndex.set(edge.from, new Set());
         if (!this.incomingIndex.has(edge.to)) this.incomingIndex.set(edge.to, new Set());
 
@@ -128,7 +91,7 @@ export class Graph {
         const edge = this.edges.get(edgeId);
         if (!edge) return false;
 
-        // Actualizar índices
+        // Update indices
         this.outgoingIndex.get(edge.from)?.delete(edgeId);
         this.incomingIndex.get(edge.to)?.delete(edgeId);
 
@@ -139,7 +102,11 @@ export class Graph {
         return this.edges.get(edgeId);
     }
 
-    // --- Relaciones Adyacentes ---
+    getTimeline() {
+        return Array.from(this.nodes.values()).sort((a, b) => (a.data.date || 0) - (b.data.date || 0));
+    }
+
+    // --- Adjacent Relationships ---
 
     getOutgoing(nodeId) {
         const edgeIds = this.outgoingIndex.get(nodeId);

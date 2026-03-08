@@ -1,0 +1,40 @@
+/* Epoch Engine Timeline Styles */
+
+.epoch-svg {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.event-rect {
+    fill: #ffffff;
+    stroke: #495057;
+    stroke-width: 2;
+    transition: fill 0.2s;
+}
+
+.epoch-node:hover .event-rect {
+    fill: #e9ecef;
+    cursor: pointer;
+}
+
+.event-text {
+    font-size: 12px;
+    font-weight: bold;
+    fill: #212529;
+    pointer-events: none;
+}
+
+.epoch-edge {
+    fill: none;
+    stroke-width: 2;
+    stroke-dasharray: 4, 1;
+}
+
+/* Relationship Types Colors */
+.type-precedes { stroke: #adb5bd; } /* Gray */
+.type-causes   { stroke: #007bff; stroke-dasharray: 0; } /* Blue */
+.type-branches { stroke: #fd7e14; } /* Orange */
+.type-merges   { stroke: #28a745; } /* Green */
+.type-loops    { stroke: #dc3545; } /* Red */
