@@ -1,4 +1,4 @@
-import { EdgeTypes, EpochEngine, Suceso } from '../src/index.js';
+import { EdgeTypes, EpochEngine } from '../src/index.js';
 
 const output = document.getElementById('output');
 const btn = document.getElementById('run-demo');
