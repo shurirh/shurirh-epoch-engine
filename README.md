@@ -1,2 +1,2 @@
 # shurirh-epoch-engine
-Shuri EpochEngine.JS - A JavaScript narrative temporal engine for events representation
+Shuri EpochEngine.JS - Un motor narrativo y temporal en JavaScript para la representación de eventos
