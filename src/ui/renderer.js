@@ -112,7 +112,7 @@ export class Renderer {
 
         const polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
         polygon.setAttribute("points", "0 0, 10 3.5, 0 7");
-        polygon.setAttribute("fill", "#666");
+        polygon.setAttribute("fill", "#ccc");
 
         marker.appendChild(polygon);
         defs.appendChild(marker);

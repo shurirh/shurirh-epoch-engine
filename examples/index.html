@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Epoch Engine - Demo</title>
+    <link rel="stylesheet" href="../src/ui/styles.css">
+    <link rel="stylesheet" href="main.css">
+</head>
+
+<body>
+    <h1>Epoch Engine — Demo</h1>
+    <p>Restructuring + JSON I/O + SVG Renderer + CSV Adapter</p>
+
+    <div class="controls">
+        <h3>Input CSV Data</h3>
+        <textarea id="csv-input">id,title,description,start,end,tags,meta,precedes,causes,branches,merges,loops
+e1,First Landing,Arrival at Mars,2032-04-10,,space|mars,{"location":"Mars"},e2,,,,
+e2,First walk,First steps on red soil,2032-04-10,,space|mars,{"location":"Mars"},,e1,,,
+e3,Temporal divergence,,2032-04-11,,timeline,{"reason":"paradox"},,,e4,,
+e4,Alternate future,,2032-04-11,,altfuture,{},,,,e2|e3,</textarea>
+        <br><br>
+        <button id="render-btn">Process & Render</button>
+    </div>
+
+    <div id="timeline-container"></div>
+
+    <script type="module" src="./main.js"></script>
+</body>
+
+</html>

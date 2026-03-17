@@ -35,6 +35,12 @@ textarea {
     width: 100%;
     height: 150px;
     font-family: monospace;
+    background: #000;
+    color: #4ade80;
+    border: 1px solid #333;
+    padding: 10px;
+    border-radius: 4px;
+    box-sizing: border-box;
 }
 
 #timeline-container {
@@ -57,9 +63,10 @@ button:hover {
 }
 
 .controls {
-    background: #eee;
+    background: #1e1e1e;
     padding: 15px;
     border-radius: 8px;
+    border: 1px solid #333;
 }
 
 .success {
