@@ -4,6 +4,7 @@ import { Edge, EdgeTypes } from './edge.js';
 import { Event } from './event.js';
 import { importJSON as ioImportJSON } from '../io/jsonImporter.js';
 import { exportJSON as ioExportJSON } from '../io/jsonExporter.js';
+import { i18n } from '../i18n/index.js';
 
 export class EpochEngine {
     constructor() {
@@ -17,7 +18,7 @@ export class EpochEngine {
      */
     addEvent(event) {
         if (!(event instanceof Event)) {
-            throw new Error('Must provide an Event instance');
+            throw new Error(i18n.t('engine.errors.invalidEvent'));
         }
         const node = new Node(event.id, event);
         this.graph.addNode(node);
@@ -51,14 +52,14 @@ export class EpochEngine {
      */
     relate(fromId, toId, type, metadata = {}) {
         if (!Object.values(EdgeTypes).includes(type)) {
-            throw new Error(`Invalid relationship type: ${type}`);
+            throw new Error(i18n.t('engine.errors.invalidRelType', { type }));
         }
 
         const fromNode = this.graph.getNode(fromId);
         const toNode = this.graph.getNode(toId);
 
-        if (!fromNode) throw new Error(`Origin Event with id '${fromId}' does not exist.`);
-        if (!toNode) throw new Error(`Destination Event with id '${toId}' does not exist.`);
+        if (!fromNode) throw new Error(i18n.t('engine.errors.missingOrigin', { id: fromId }));
+        if (!toNode) throw new Error(i18n.t('engine.errors.missingDestination', { id: toId }));
 
         // Generate a unique ID using crypto.randomUUID()
         const edgeId = crypto.randomUUID();
@@ -116,9 +117,12 @@ export class EpochEngine {
                 // If both have dates, validate basic chronological consistency
                 if (fromEvent.date !== null && toEvent.date !== null) {
                     if (fromEvent.date > toEvent.date) {
-                        report.warnings.push(
-                            `Chronological inconsistency: Event '${fromEvent.title}' precedes '${toEvent.title}', but origin date (${fromEvent.date}) is after destination date (${toEvent.date}).`
-                        );
+                        report.warnings.push(i18n.t('engine.warnings.chronologicalInconsistency', {
+                            fromTitle: fromEvent.title,
+                            toTitle: toEvent.title,
+                            fromDate: fromEvent.date,
+                            toDate: toEvent.date
+                        }));
                     }
                 }
 
@@ -126,18 +130,19 @@ export class EpochEngine {
                 const fromBranch = fromEvent.meta?.originBranch;
                 const toBranch = toEvent.meta?.originBranch;
                 if (fromBranch && toBranch && fromBranch !== toBranch) {
-                    report.warnings.push(
-                        `'precedes' relationship between '${fromEvent.title}' and '${toEvent.title}' crosses different branches declared in meta (${fromBranch} -> ${toBranch}).`
-                    );
+                    report.warnings.push(i18n.t('engine.warnings.crossesBranches', {
+                        fromTitle: fromEvent.title,
+                        toTitle: toEvent.title,
+                        fromBranch,
+                        toBranch
+                    }));
                 }
             }
 
             // Validate 'branches'
             if (edge.type === EdgeTypes.BRANCHES) {
                 if (!toEvent.meta?.originBranch) {
-                    report.warnings.push(
-                        `Destination Event '${toEvent.title}' is a product of a 'branches' but does not declare an origin branch in its meta.`
-                    );
+                    report.warnings.push(i18n.t('engine.warnings.missingOriginBranch', { title: toEvent.title }));
                 }
             }
 
@@ -146,9 +151,7 @@ export class EpochEngine {
                 const toId = edge.to;
                 const incomingMergesCount = this.graph.getIncoming(toId).filter(e => e.type === EdgeTypes.MERGES).length;
                 if (incomingMergesCount < 2) {
-                    report.warnings.push(
-                        `Event '${toEvent.title}' is a destination of a 'merges' relationship, but does not receive at least two confluences of this type.`
-                    );
+                    report.warnings.push(i18n.t('engine.warnings.missingMerges', { title: toEvent.title }));
                 }
             }
         }

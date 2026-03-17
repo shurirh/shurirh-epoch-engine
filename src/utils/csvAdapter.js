@@ -1,3 +1,5 @@
+import { i18n } from '../i18n/index.js';
+
 /**
  * Utility to convert CSV data strings into the Epoch Engine JSON format.
  */
@@ -31,7 +33,7 @@ export function csvToJSON(csvString) {
                 meta = JSON.parse(metaStr);
             }
         } catch (e) {
-            console.warn(`Failed to parse meta for event ${id}`);
+            console.warn(i18n.t('csv.warnings.parseMeta', { id }));
         }
 
         events.push({

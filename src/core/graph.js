@@ -1,5 +1,6 @@
 import { Node } from './node.js';
 import { Edge } from './edge.js';
+import { i18n } from '../i18n/index.js';
 
 /**
  * Directed Graph Structure.
@@ -18,10 +19,10 @@ export class Graph {
 
     addNode(node) {
         if (!(node instanceof Node)) {
-            throw new Error('Must provide a Node instance');
+            throw new Error(i18n.t('graph.errors.invalidNode'));
         }
         if (this.nodes.has(node.id)) {
-            throw new Error(`Node with ID ${node.id} already exists`);
+            throw new Error(i18n.t('graph.errors.nodeExists', { id: node.id }));
         }
         this.nodes.set(node.id, node);
         return node;
@@ -57,13 +58,13 @@ export class Graph {
 
     addEdge(edge) {
         if (!(edge instanceof Edge)) {
-            throw new Error('Must provide an Edge instance');
+            throw new Error(i18n.t('graph.errors.invalidEdge'));
         }
         if (!this.nodes.has(edge.from) || !this.nodes.has(edge.to)) {
-            throw new Error('Both nodes (from and to) must exist in the graph before creating an edge');
+            throw new Error(i18n.t('graph.errors.missingNodes'));
         }
         if (this.edges.has(edge.id)) {
-            throw new Error(`Edge with ID ${edge.id} already exists`);
+            throw new Error(i18n.t('graph.errors.edgeExists', { id: edge.id }));
         }
 
         // Prevent logical duplicates (A --type--> B)
@@ -71,7 +72,7 @@ export class Graph {
         for (const existingEdge of this.edges.values()) {
             const existingKey = `${existingEdge.from}|${existingEdge.type}|${existingEdge.to}`;
             if (logicalKey === existingKey) {
-                throw new Error(`A relationship of type ${edge.type} already exists between ${edge.from} and ${edge.to}`);
+                throw new Error(i18n.t('graph.errors.duplicateRel', { type: edge.type, from: edge.from, to: edge.to }));
             }
         }
 

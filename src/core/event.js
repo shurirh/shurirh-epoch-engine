@@ -1,3 +1,5 @@
+import { i18n } from '../i18n/index.js';
+
 /**
  * Represents the minimum unit of historical/narrative information.
  * It is a purely descriptive entity, it does not contain logical temporal relationships,
@@ -22,14 +24,14 @@ export class Event {
         meta = {}
     }) {
         if (!id) {
-            throw new Error('Every Event must have a unique id.');
+            throw new Error(i18n.t('events.errors.uniqueID'));
         }
         if (!title) {
-            throw new Error('Every Event must have a title.');
+            throw new Error(i18n.t('events.errors.title'));
         }
 
         if (date !== null && typeof date !== 'number') {
-            throw new Error('The date property must be of type number (or null).');
+            throw new Error(i18n.t('events.errors.invalidDate'));
         }
 
         this.id = id;

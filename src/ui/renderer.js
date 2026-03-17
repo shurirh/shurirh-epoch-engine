@@ -1,3 +1,5 @@
+import { i18n } from '../i18n/index.js';
+
 /**
  * SVG-based renderer for the Epoch Engine timeline.
  */
@@ -8,7 +10,7 @@ export class Renderer {
      * @param {HTMLElement} container - DOM element to render the graph into
      */
     renderGraph(engine, container) {
-        if (!container) throw new Error('A container element is required');
+        if (!container) throw new Error(i18n.t('renderer.errors.missingContainer'));
 
         // Clear container
         container.innerHTML = '';

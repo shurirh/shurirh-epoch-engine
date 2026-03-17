@@ -1,4 +1,5 @@
 import { Event } from '../core/event.js';
+import { i18n } from '../i18n/index.js';
 
 /**
  * Imports a complete graph from a JSON object.
@@ -8,7 +9,7 @@ import { Event } from '../core/event.js';
  */
 export function importJSON(engine, data) {
     if (!data || !Array.isArray(data.events) || !Array.isArray(data.relations)) {
-        throw new Error('Invalid JSON format. Must contain "events" and "relations" as arrays.');
+        throw new Error(i18n.t('io.errors.invalidJSON'));
     }
 
     let eventsImported = 0;
@@ -18,7 +19,7 @@ export function importJSON(engine, data) {
     data.events.forEach(evData => {
         // Validation for duplicate IDs (if engine already has it)
         if (engine.getEvent(evData.id)) {
-            console.warn(`Event with ID ${evData.id} already exists. Skipping.`);
+            console.warn(i18n.t('io.warnings.duplicateEvent', { id: evData.id }));
             return;
         }
 
@@ -40,7 +41,7 @@ export function importJSON(engine, data) {
             engine.relate(relData.from, relData.to, relData.type, relData.metadata);
             relationsImported++;
         } catch (error) {
-            console.error(`Error importing relation from ${relData.from} to ${relData.to}: ${error.message}`);
+            console.error(i18n.t('io.errors.importRelation', { from: relData.from, to: relData.to, message: error.message }));
         }
     });
 
